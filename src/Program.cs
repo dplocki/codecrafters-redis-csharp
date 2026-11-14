@@ -4,18 +4,23 @@ using System.Text;
 
 var server = new TcpListener(IPAddress.Any, 6379);
 server.Start();
+
 while (true)
 {
     var client = server.AcceptSocket();
+    _ = Task.Run(() => HandleClient(client));
+}
 
-    byte[] buffer = new byte[1024];
+static void HandleClient(Socket client)
+{
+    var recieveBuffer = new byte[1024];
     while (true)
     {
-        int bytesRead = client.Receive(buffer);
-        if (bytesRead == 0) {
+        if (client.Receive(recieveBuffer) == 0)
             break;
-        }
 
         client.Send(Encoding.UTF8.GetBytes("+PONG\r\n"));
     }
+
+    client.Close();
 }
