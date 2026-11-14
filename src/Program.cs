@@ -16,8 +16,9 @@ static void HandleClient(Socket client)
     var recieveBuffer = new byte[1024];
     while (true)
     {
-        if (client.Receive(recieveBuffer) == 0)
+        if (client.Receive(recieveBuffer) == 0) {
             break;
+        }
 
         client.Send(Encoding.UTF8.GetBytes("+PONG\r\n"));
     }
