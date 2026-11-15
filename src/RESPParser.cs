@@ -4,14 +4,15 @@ public class RESPParser
     private byte[] input = [];
     private int currentIndex;
 
-    public RespValue Parse(string input)
+    public RespValue Parse(byte[] input)
     {
-        if (string.IsNullOrEmpty(input))
+        ArgumentNullException.ThrowIfNull(input);
+        if (input.Length == 0)
         {
             throw new ArgumentException("Input cannot be null or empty.", nameof(input));
         }
 
-        this.input = System.Text.Encoding.UTF8.GetBytes(input);
+        this.input = input;
         currentIndex = 0;
         return ParseValue();
     }
@@ -24,21 +25,15 @@ public class RESPParser
         }
 
         byte type = input[currentIndex++];
-        switch (type)
+        return type switch
         {
-            case (byte)'+':
-                return new RespSimpleString(ReadUpToTerminator());
-            case (byte)'-':
-                return new RespError(ReadUpToTerminator());
-            case (byte)':':
-                return new RespInteger(ParseLong(ReadUpToTerminator()));
-            case (byte)'$':
-                return ParseBulkString();
-            case (byte)'*':
-                return ParseArray();
-            default:
-                throw new FormatException($"Unknown RESP type byte: {type}.");
-        }
+            (byte)'+' => new RespSimpleString(ReadUpToTerminator()),
+            (byte)'-' => new RespError(ReadUpToTerminator()),
+            (byte)':' => new RespInteger(ParseLong(ReadUpToTerminator())),
+            (byte)'$' => ParseBulkString(),
+            (byte)'*' => ParseArray(),
+            _ => throw new FormatException($"Unknown RESP type byte: {type}."),
+        };
     }
 
     private RespValue ParseBulkString()
