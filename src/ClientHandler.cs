@@ -17,18 +17,13 @@ public class ClientHandler
             }
 
             var result = parser.Parse(receiveBuffer);
-            if (result is RespArray { Values: { Count: > 0 } values })
+            if (result is RespBulkString bulkString)
             {
-                var command = values[0] as RespBulkString;
-                if (command != null && Encoding.UTF8.GetString(command.Value!).Equals("PING", StringComparison.OrdinalIgnoreCase))
+                var command = Encoding.UTF8.GetString(bulkString.Value!);
+                var args = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (args[0].Equals("PING", StringComparison.OrdinalIgnoreCase))
                 {
-                    RespValue response = values.Count switch
-                    {
-                        1 => new RespSimpleString("PONG"),
-                        2 when values[1] is RespBulkString message => message,
-                        _ => new RespError("ERR wrong number of arguments for 'ping' command"),
-                    };
-                    client.Send(RESPSerializer.Serialize(response));
+                    client.Send(Encoding.UTF8.GetBytes("+PONG\r\n"));
                 }
                 else
                 {
