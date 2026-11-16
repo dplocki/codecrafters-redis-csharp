@@ -23,7 +23,10 @@ public class ClientHandler
                 var args = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (args[0].Equals("PING", StringComparison.OrdinalIgnoreCase))
                 {
-                    client.Send(Encoding.UTF8.GetBytes("+PONG\r\n"));
+                    var response = new string[args.Length];
+                    response[0] = "PONG";
+                  
+                    client.Send(RESPSerializer.Serialize(new RespBulkString(Encoding.UTF8.GetBytes(string.Join("\r\n", response) + "\r\n"))));
                 }
                 else
                 {
