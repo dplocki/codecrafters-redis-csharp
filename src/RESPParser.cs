@@ -12,16 +12,40 @@ public class RESPParser
             throw new ArgumentException("Input cannot be null or empty.", nameof(input));
         }
 
+        if (!TryParse(input, out RespValue? value, out _))
+        {
+            throw new FormatException("Incomplete RESP input.");
+        }
+
+        return value!;
+    }
+
+    public bool TryParse(byte[] input, out RespValue? value, out int bytesConsumed)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+
         this.input = input;
         currentIndex = 0;
-        return ParseValue();
+
+        try
+        {
+            value = ParseValue();
+            bytesConsumed = currentIndex;
+            return true;
+        }
+        catch (IncompleteRespException)
+        {
+            value = null;
+            bytesConsumed = 0;
+            return false;
+        }
     }
 
     private RespValue ParseValue()
     {
         if (currentIndex >= input.Length)
         {
-            throw new FormatException("Unexpected end of RESP input.");
+            throw new IncompleteRespException();
         }
 
         byte type = input[currentIndex++];
@@ -44,12 +68,17 @@ public class RESPParser
             return new RespBulkString(null);
         }
 
-        if (length < 0 || length > int.MaxValue || currentIndex + length + Terminator.Length > input.Length)
+        if (length < 0 || length > int.MaxValue)
         {
             throw new FormatException("Invalid RESP bulk string length.");
         }
 
         int byteLength = (int)length;
+        if ((long)currentIndex + byteLength + Terminator.Length > input.Length)
+        {
+            throw new IncompleteRespException();
+        }
+
         var value = input.AsSpan(currentIndex, byteLength).ToArray();
         currentIndex += byteLength;
         ExpectTerminator();
@@ -96,13 +125,17 @@ public class RESPParser
             }
         }
 
-        throw new FormatException("RESP terminator \\r\\n was not found.");
+        throw new IncompleteRespException();
     }
 
     private void ExpectTerminator()
     {
-        if (currentIndex > input.Length - Terminator.Length ||
-            input[currentIndex] != Terminator[0] ||
+        if (currentIndex > input.Length - Terminator.Length)
+        {
+            throw new IncompleteRespException();
+        }
+
+        if (input[currentIndex] != Terminator[0] ||
             input[currentIndex + 1] != Terminator[1])
         {
             throw new FormatException("Invalid RESP bulk string terminator.");
@@ -121,4 +154,6 @@ public class RESPParser
 
         throw new FormatException("Invalid RESP integer format.");
     }
+
+    private sealed class IncompleteRespException : Exception;
 }
