@@ -52,7 +52,7 @@ public static class RESPSerializer
 
     private static void WriteLine(Stream output, byte prefix, string value)
     {
-        if (value.IndexOfAny('\r', '\n') >= 0)
+        if (value.IndexOfAny(['\r', '\n']) >= 0)
         {
             throw new ArgumentException("RESP line values cannot contain CR or LF.", nameof(value));
         }

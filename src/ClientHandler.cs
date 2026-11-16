@@ -51,29 +51,50 @@ public class ClientHandler
 
     private static byte[] CreateResponse(RespValue request)
     {
-        if (request is not RespBulkString { Value: not null } bulkString)
-        {
-            return Encoding.UTF8.GetBytes("-ERR invalid request\r\n");
-        }
-
-        var command = Encoding.UTF8.GetString(bulkString.Value);
-        var args = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var args = ExtractCommandArgs(request);
         if (args.Length == 0)
         {
             return Encoding.UTF8.GetBytes("-ERR invalid request\r\n");
         }
 
-        if (args[0].Equals("PING", StringComparison.OrdinalIgnoreCase))
+        var command = args[0];
+        if (command.Equals("PING", StringComparison.OrdinalIgnoreCase))
         {
             return Encoding.UTF8.GetBytes("+PONG\r\n");
         }
 
-        if (args[0].Equals("ECHO", StringComparison.OrdinalIgnoreCase) && args.Length == 2)
+        if (command.Equals("ECHO", StringComparison.OrdinalIgnoreCase) && args.Length == 2)
         {
             return RESPSerializer.Serialize(new RespBulkString(Encoding.UTF8.GetBytes(args[1])));
         }
 
         return Encoding.UTF8.GetBytes("-ERR unknown command\r\n");
+    }
+
+    private static string[] ExtractCommandArgs(RespValue request)
+    {
+        if (request is RespArray { Values: not null } array)
+        {
+            var values = new List<string>();
+            foreach (var item in array.Values)
+            {
+                if (item is not RespBulkString { Value: not null } arrayBulkValue)
+                {
+                    return [];
+                }
+
+                values.Add(Encoding.UTF8.GetString(arrayBulkValue.Value));
+            }
+
+            return [.. values];
+        }
+
+        if (request is RespBulkString { Value: not null } singleBulkValue)
+        {
+            return [Encoding.UTF8.GetString(singleBulkValue.Value)];
+        }
+
+        return [];
     }
 
     private static void SendAll(Socket client, byte[] response)
