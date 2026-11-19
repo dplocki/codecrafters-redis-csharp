@@ -81,9 +81,46 @@ public class ClientHandler
             return RESPSerializer.Serialize(new RespBulkString(Encoding.UTF8.GetBytes(value)));
         }
 
-        if (command.Equals("SET", StringComparison.OrdinalIgnoreCase) && args.Length == 3)
+        if (command.Equals("SET", StringComparison.OrdinalIgnoreCase) && args.Length >= 3)
         {
-            memory.Set(args[1], args[2]);
+            TimeSpan expire;
+
+            if (args.Length == 5)
+            {
+                if (args[3].Equals("PX", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (int.TryParse(args[4], out int milliseconds))
+                    {
+                        expire = TimeSpan.FromMilliseconds(milliseconds);
+                    }
+                    else
+                    {
+                        return Encoding.UTF8.GetBytes("-ERR invalid PX value\r\n");
+                    }
+                }
+                else if (args[3].Equals("EX", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (int.TryParse(args[4], out int seconds))
+                    {
+                        expire = TimeSpan.FromSeconds(seconds);
+                    }
+                    else
+                    {
+                        return Encoding.UTF8.GetBytes("-ERR invalid EX value\r\n");
+                    }
+                }
+                else
+                {
+                    return Encoding.UTF8.GetBytes("-ERR unknown option\r\n");
+                }
+            }
+            else
+            {
+                // default expiration time if not provided
+                expire = TimeSpan.FromMilliseconds(100);
+            }
+
+            memory.Set(args[1], args[2], expire);
             return Encoding.UTF8.GetBytes("+OK\r\n");
         }
 
