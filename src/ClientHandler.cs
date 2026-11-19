@@ -3,6 +3,8 @@ using System.Text;
 
 public class ClientHandler
 {
+    private readonly Memory memory = new();
+
     public void Handle(Socket client)
     {
         var receiveBuffer = new byte[1024];
@@ -49,7 +51,7 @@ public class ClientHandler
         }
     }
 
-    private static byte[] CreateResponse(RespValue request)
+    private byte[] CreateResponse(RespValue request)
     {
         var args = ExtractCommandArgs(request);
         if (args.Length == 0)
@@ -66,6 +68,23 @@ public class ClientHandler
         if (command.Equals("ECHO", StringComparison.OrdinalIgnoreCase) && args.Length == 2)
         {
             return RESPSerializer.Serialize(new RespBulkString(Encoding.UTF8.GetBytes(args[1])));
+        }
+
+        if (command.Equals("GET", StringComparison.OrdinalIgnoreCase) && args.Length == 2)
+        {
+            var value = memory.Get(args[1]);
+            if (value is null)
+            {
+                return Encoding.UTF8.GetBytes("$-1\r\n");
+            }
+
+            return RESPSerializer.Serialize(new RespBulkString(Encoding.UTF8.GetBytes(value)));
+        }
+
+        if (command.Equals("SET", StringComparison.OrdinalIgnoreCase) && args.Length == 3)
+        {
+            memory.Set(args[1], args[2]);
+            return Encoding.UTF8.GetBytes("+OK\r\n");
         }
 
         return Encoding.UTF8.GetBytes("-ERR unknown command\r\n");
