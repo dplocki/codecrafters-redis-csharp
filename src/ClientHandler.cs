@@ -59,18 +59,18 @@ public class ClientHandler
             return Encoding.UTF8.GetBytes("-ERR invalid request\r\n");
         }
 
-        var command = args[0];
-        if (command.Equals("PING", StringComparison.OrdinalIgnoreCase))
+        var command = args[0].ToUpper();
+        if (command == "PING")
         {
             return Encoding.UTF8.GetBytes("+PONG\r\n");
         }
 
-        if (command.Equals("ECHO", StringComparison.OrdinalIgnoreCase) && args.Length == 2)
+        if (command == "ECHO" && args.Length == 2)
         {
             return RESPSerializer.Serialize(new RespBulkString(Encoding.UTF8.GetBytes(args[1])));
         }
 
-        if (command.Equals("GET", StringComparison.OrdinalIgnoreCase) && args.Length == 2)
+        if (command == "GET" && args.Length == 2)
         {
             var value = memory.Get(args[1]);
             if (value is null)
@@ -81,7 +81,7 @@ public class ClientHandler
             return RESPSerializer.Serialize(new RespBulkString(Encoding.UTF8.GetBytes(value)));
         }
 
-        if (command.Equals("SET", StringComparison.OrdinalIgnoreCase) && args.Length >= 3)
+        if (command == "SET" && args.Length >= 3)
         {
             TimeSpan expire;
 
