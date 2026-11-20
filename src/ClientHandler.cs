@@ -126,13 +126,13 @@ public class ClientHandler
 
         if (command == "TYPE" && args.Length == 2)
         {
-            var value = memory.GetValue(args[1]);
+            var value = memory.GetType(args[1]);
             if (value is null)
             {
                 return Encoding.UTF8.GetBytes("+none\r\n");
             }
 
-            return Encoding.UTF8.GetBytes($"+{value.ToLowerInvariant()}\r\n");
+            return Encoding.UTF8.GetBytes($"+{value!.ToString().ToLowerInvariant()}\r\n");
         }
 
         return Encoding.UTF8.GetBytes("-ERR unknown command\r\n");
