@@ -72,7 +72,7 @@ public class ClientHandler
 
         if (command == "GET" && args.Length == 2)
         {
-            var value = memory.Get(args[1]);
+            var value = memory.GetValue(args[1]);
             if (value is null)
             {
                 return Encoding.UTF8.GetBytes("$-1\r\n");
@@ -120,8 +120,19 @@ public class ClientHandler
                 expire = TimeSpan.FromMilliseconds(100);
             }
 
-            memory.Set(args[1], args[2], expire);
+            memory.Set(args[1], args[2], StoredValueTypes.String, expire);
             return Encoding.UTF8.GetBytes("+OK\r\n");
+        }
+
+        if (command == "TYPE" && args.Length == 2)
+        {
+            var value = memory.GetValue(args[1]);
+            if (value is null)
+            {
+                return Encoding.UTF8.GetBytes("+none\r\n");
+            }
+
+            return Encoding.UTF8.GetBytes($"+{value.ToLowerInvariant()}\r\n");
         }
 
         return Encoding.UTF8.GetBytes("-ERR unknown command\r\n");
