@@ -1,9 +1,23 @@
 using System.Net.Sockets;
 using System.Text;
+using codecrafters_redis.src.commands;
 
 public class ClientHandler
 {
     private readonly Memory memory = new();
+    private readonly IReadOnlyDictionary<string, ICommand> commands;
+
+    public ClientHandler()
+    {
+        commands = new Dictionary<string, ICommand>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["PING"] = new PingCommand(),
+            ["ECHO"] = new EchoCommand(),
+            ["GET"] = new GetCommand(memory),
+            ["SET"] = new SetCommand(memory),
+            ["TYPE"] = new TypeCommand(memory),
+        };
+    }
 
     public void Handle(Socket client)
     {
@@ -59,83 +73,13 @@ public class ClientHandler
             return Encoding.UTF8.GetBytes("-ERR invalid request\r\n");
         }
 
-        var command = args[0].ToUpper();
-        if (command == "PING")
+        if (!commands.TryGetValue(args[0], out var command))
         {
-            return Encoding.UTF8.GetBytes("+PONG\r\n");
+            return Encoding.UTF8.GetBytes("-ERR unknown command\r\n");
         }
 
-        if (command == "ECHO" && args.Length == 2)
-        {
-            return RESPSerializer.Serialize(new RespBulkString(Encoding.UTF8.GetBytes(args[1])));
-        }
-
-        if (command == "GET" && args.Length == 2)
-        {
-            var value = memory.GetValue(args[1]);
-            if (value is null)
-            {
-                return Encoding.UTF8.GetBytes("$-1\r\n");
-            }
-
-            return RESPSerializer.Serialize(new RespBulkString(Encoding.UTF8.GetBytes(value)));
-        }
-
-        if (command == "SET" && args.Length >= 3)
-        {
-            TimeSpan expire;
-
-            if (args.Length == 5)
-            {
-                if (args[3].Equals("PX", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (int.TryParse(args[4], out int milliseconds))
-                    {
-                        expire = TimeSpan.FromMilliseconds(milliseconds);
-                    }
-                    else
-                    {
-                        return Encoding.UTF8.GetBytes("-ERR invalid PX value\r\n");
-                    }
-                }
-                else if (args[3].Equals("EX", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (int.TryParse(args[4], out int seconds))
-                    {
-                        expire = TimeSpan.FromSeconds(seconds);
-                    }
-                    else
-                    {
-                        return Encoding.UTF8.GetBytes("-ERR invalid EX value\r\n");
-                    }
-                }
-                else
-                {
-                    return Encoding.UTF8.GetBytes("-ERR unknown option\r\n");
-                }
-            }
-            else
-            {
-                // default expiration time if not provided
-                expire = TimeSpan.FromMilliseconds(100);
-            }
-
-            memory.Set(args[1], args[2], StoredValueTypes.String, expire);
-            return Encoding.UTF8.GetBytes("+OK\r\n");
-        }
-
-        if (command == "TYPE" && args.Length == 2)
-        {
-            var value = memory.GetType(args[1]);
-            if (value is null)
-            {
-                return Encoding.UTF8.GetBytes("+none\r\n");
-            }
-
-            return Encoding.UTF8.GetBytes($"+{value!.ToString().ToLowerInvariant()}\r\n");
-        }
-
-        return Encoding.UTF8.GetBytes("-ERR unknown command\r\n");
+        var response = command.Execute([.. args.Skip(1)]);
+        return RESPSerializer.Serialize(response);
     }
 
     private static string[] ExtractCommandArgs(RespValue request)
