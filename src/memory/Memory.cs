@@ -1,3 +1,5 @@
+namespace codecrafters_redis.src.memory;
+
 public class Memory
 {
     private readonly Dictionary<string, MemoryPice> _store = [];
@@ -9,14 +11,14 @@ public class Memory
 
     public string? GetValue(string key)
     {
-        MemoryPice? memoryPice = LoadFromMemory(key);
+        var memoryPice = LoadFromMemory(key);
 
         return memoryPice?.Value ?? null;
     }
 
     public StoredValueTypes? GetType(string key)
     {
-        MemoryPice? memoryPice = LoadFromMemory(key);
+        var memoryPice = LoadFromMemory(key);
 
         return memoryPice?.Type ?? null;
     }
@@ -36,13 +38,4 @@ public class Memory
 
         return memoryPice;
     }
-}
-
-internal class MemoryPice(string key, string value, StoredValueTypes type, DateTime from, TimeSpan expiry)
-{
-    public string Key { get; } = key;
-    public string Value { get; } = value;
-    public StoredValueTypes Type { get; } = type;
-    public DateTime From { get; } = from;
-    public TimeSpan Expiry { get; } = expiry;
 }

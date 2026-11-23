@@ -1,3 +1,5 @@
+using codecrafters_redis.src.memory;
+
 namespace codecrafters_redis.src.commands;
 
 public sealed class GetCommand(Memory memory) : ICommand

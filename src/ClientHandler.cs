@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Text;
 using codecrafters_redis.src.commands;
+using codecrafters_redis.src.memory;
 
 public class ClientHandler
 {
