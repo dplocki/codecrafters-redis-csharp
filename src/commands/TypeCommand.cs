@@ -2,7 +2,7 @@ using codecrafters_redis.src.memory;
 
 namespace codecrafters_redis.src.commands;
 
-public sealed class TypeCommand(Memory memory) : ICommand
+public sealed class TypeCommand(Memory memory, StreamsManager streamsManager) : ICommand
 {
     public RespValue Execute(params string[] args)
     {
@@ -11,9 +11,17 @@ public sealed class TypeCommand(Memory memory) : ICommand
             return new RespError("ERR wrong number of arguments for 'type' command");
         }
 
-        var value = memory.GetType(args[0]);
-        return value is null
-            ? new RespSimpleString("none")
-            : new RespSimpleString(value.Value.ToString().ToLowerInvariant());
+        var key = args[0];
+        var value = memory.GetType(key);
+        if (value is not null) {
+            return new RespSimpleString(value.Value.ToString().ToLowerInvariant());
+        }
+    
+        if (streamsManager.IsStream(key))
+        {
+            return new RespSimpleString(StoredValueTypes.Stream.ToString().ToLowerInvariant());
+        }
+
+        return new RespSimpleString("none");
     }
 }

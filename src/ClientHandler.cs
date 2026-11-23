@@ -6,6 +6,7 @@ using codecrafters_redis.src.memory;
 public class ClientHandler
 {
     private readonly Memory memory = new();
+    private readonly StreamsManager streamsManager = new();
     private readonly IReadOnlyDictionary<string, ICommand> commands;
 
     public ClientHandler()
@@ -16,7 +17,8 @@ public class ClientHandler
             ["ECHO"] = new EchoCommand(),
             ["GET"] = new GetCommand(memory),
             ["SET"] = new SetCommand(memory),
-            ["TYPE"] = new TypeCommand(memory),
+            ["TYPE"] = new TypeCommand(memory, streamsManager),
+            ["XADD"] = new XAddCommand(streamsManager),
         };
     }
 
