@@ -33,7 +33,7 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
         }
         catch (Exception ex)
         {
-            return new RespError($"-ERR {ex.Message}");
+            return new RespError($"ERR {ex.Message}");
         }
 
         return new RespBulkString(System.Text.Encoding.UTF8.GetBytes(args[1]));
