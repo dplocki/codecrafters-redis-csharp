@@ -2,21 +2,21 @@ namespace codecrafters_redis.src.memory;
 
 public class StreamsManager
 {
-    private readonly Dictionary<string, IDictionary<string, IDictionary<string, string>>> streams = [];
+    private readonly Dictionary<string, Stream> streams = [];
 
     public bool IsStream(string key)
     {
         return streams.ContainsKey(key);
     }
 
-    public void Add(string key, string id, Dictionary<string, string> fields)
+    public void Add(string key, int millisecondsTime, int sequenceNumber, IDictionary<string, string> fields)
     {
         if (!streams.ContainsKey(key))
         {
-            streams[key] = new Dictionary<string, IDictionary<string, string>>();
+            streams[key] = new Stream();
         }
 
-        var streamEntries = streams[key];
-        streamEntries[id] = fields;
+        var stream = streams[key];
+        stream.Add(millisecondsTime, sequenceNumber, fields);
     }
 }

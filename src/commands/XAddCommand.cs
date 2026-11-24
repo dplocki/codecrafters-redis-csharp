@@ -11,7 +11,10 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
         }
 
         var streamKey = args[0];
-        var id = args[1];
+        var idTokens = args[1].Split('-');
+        var millisecondsTime = int.Parse(idTokens[0]);
+        var sequenceNumber = int.Parse(idTokens[1]);
+
         var fieldValues = args.Skip(2).ToArray();
         if (fieldValues.Length % 2 != 0)
         {
@@ -24,8 +27,15 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
             fields[fieldValues[i]] = fieldValues[i + 1];
         }
 
-        streamsManager.Add(streamKey, id, fields);
+        try 
+        {
+            streamsManager.Add(streamKey, millisecondsTime, sequenceNumber, fields);
+        }
+        catch (Exception ex)
+        {
+            return new RespError($"-ERR {ex.Message}");
+        }
 
-        return new RespBulkString(System.Text.Encoding.UTF8.GetBytes(id.ToString()));
+        return new RespBulkString(System.Text.Encoding.UTF8.GetBytes(args[1]));
     }
 }
