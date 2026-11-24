@@ -7,7 +7,7 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
     {
         if (args.Length < 3)
         {
-            return new RespError("-ERR wrong number of arguments for 'XADD' command");
+            return new RespError("ERR wrong number of arguments for 'XADD' command");
         }
 
         var streamKey = args[0];
@@ -18,7 +18,7 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
         var fieldValues = args.Skip(2).ToArray();
         if (fieldValues.Length % 2 != 0)
         {
-            return new RespError("-ERR wrong number of field-value pairs");
+            return new RespError("ERR wrong number of field-value pairs");
         }
 
         var fields = new Dictionary<string, string>();
