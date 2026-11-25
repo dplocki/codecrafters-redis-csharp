@@ -13,7 +13,7 @@ internal class Stream()
     {       
         if (millisecondsTime < lastMillisecondsTime || (millisecondsTime == lastMillisecondsTime && sequenceNumber <= lastSequenceNumber))
         {
-            throw new ArgumentException("The ID specified in XADD is equal or smaller than the target stream top item");
+            throw new ArgumentException($"ERR The ID specified in XADD must be greater than ${lastMillisecondsTime}-{lastSequenceNumber}");
         } 
 
         lastMillisecondsTime = millisecondsTime;
