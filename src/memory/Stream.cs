@@ -11,10 +11,15 @@ internal class Stream()
 
     public void Add(int millisecondsTime, int sequenceNumber, IDictionary<string, string> fields)
     {       
+        if (millisecondsTime == 0 && sequenceNumber == 0)
+        {
+            throw new ArgumentException("The ID specified in XADD must be greater than 0-0");
+        }
+
         if (millisecondsTime < lastMillisecondsTime || (millisecondsTime == lastMillisecondsTime && sequenceNumber <= lastSequenceNumber))
         {
-            throw new ArgumentException($"ERR The ID specified in XADD must be greater than ${lastMillisecondsTime}-{lastSequenceNumber}");
-        } 
+            throw new ArgumentException("The ID specified in XADD is equal or smaller than the target stream top item");
+        }
 
         lastMillisecondsTime = millisecondsTime;
         lastSequenceNumber = sequenceNumber;
