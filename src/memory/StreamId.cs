@@ -1,9 +1,9 @@
 namespace codecrafters_redis.src.memory;
 
-public readonly struct StreamId(int millisecondsTime, int? sequenceNumber)
+public readonly struct StreamId(long millisecondsTime, long? sequenceNumber)
 {
-    public int MillisecondsTime { get; } = millisecondsTime;
-    public int? SequenceNumber { get; } = sequenceNumber;
+    public long MillisecondsTime { get; } = millisecondsTime;
+    public long? SequenceNumber { get; } = sequenceNumber;
 
     public override string ToString()
     {

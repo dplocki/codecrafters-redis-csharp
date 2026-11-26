@@ -38,8 +38,8 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
 
     private StreamId ParseId(string rawId) {
         var idTokens = rawId.Split('-');
-        var millisecondsTime = int.Parse(idTokens[0]);
-        var sequenceNumber = idTokens[1] == "*" ? null : (int?)int.Parse(idTokens[1]);
+        var millisecondsTime = long.Parse(idTokens[0]);
+        var sequenceNumber = idTokens[1] == "*" ? null : (long?)long.Parse(idTokens[1]);
 
         return new StreamId(millisecondsTime, sequenceNumber);
     }
