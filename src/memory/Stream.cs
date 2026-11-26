@@ -14,17 +14,20 @@ internal class Stream()
         var newMillisecondsTime = streamId.MillisecondsTime;
         long newSequenceNumber;
 
-        if (streamId.SequenceNumber.HasValue)
+        if (!streamId.SequenceNumber.HasValue)
         {
-            newSequenceNumber = streamId.SequenceNumber.Value;
-        }
-        if (newMillisecondsTime == lastMillisecondsTime)
-        {
-            newSequenceNumber = lastSequenceNumber + 1;
+            if (entries.ContainsKey(newMillisecondsTime))
+            {
+                newSequenceNumber = 0;
+            }
+            else
+            {
+                newSequenceNumber = lastSequenceNumber + 1;
+            }
         }
         else
         {
-            newSequenceNumber = newMillisecondsTime == 0 ? 1 : 0;
+            newSequenceNumber = streamId.SequenceNumber.Value;
         }
 
         if (newMillisecondsTime == 0 && newSequenceNumber == 0)
