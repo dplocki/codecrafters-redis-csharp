@@ -12,20 +12,11 @@ internal class Stream
     public StreamId Add(StreamId streamId, IDictionary<string, string> fields)
     {
         var newMillisecondsTime = streamId.MillisecondsTime;
-
-        long newSequenceNumber;
-        if (streamId.SequenceNumber.HasValue)
-        {
-            newSequenceNumber = streamId.SequenceNumber.Value;
-        }
-        else if (newMillisecondsTime == lastMillisecondsTime)
-        {
-            newSequenceNumber = lastSequenceNumber + 1;
-        }
-        else
-        {
-            newSequenceNumber = newMillisecondsTime == 0 ? 1 : 0;
-        }
+        long newSequenceNumber = streamId.SequenceNumber ?? (
+            (newMillisecondsTime == lastMillisecondsTime)
+            ? lastSequenceNumber + 1
+            : newMillisecondsTime == 0 ? 1 : 0
+        );
 
         if (newMillisecondsTime == 0 && newSequenceNumber == 0)
         {
