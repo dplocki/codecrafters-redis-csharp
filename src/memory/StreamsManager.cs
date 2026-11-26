@@ -9,7 +9,7 @@ public class StreamsManager
         return streams.ContainsKey(key);
     }
 
-    public void Add(string key, int millisecondsTime, int sequenceNumber, IDictionary<string, string> fields)
+    public StreamId Add(string key, StreamId streamId, IDictionary<string, string> fields)
     {
         if (!streams.ContainsKey(key))
         {
@@ -17,6 +17,6 @@ public class StreamsManager
         }
 
         var stream = streams[key];
-        stream.Add(millisecondsTime, sequenceNumber, fields);
+        return stream.Add(streamId, fields);
     }
 }

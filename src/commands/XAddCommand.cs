@@ -11,9 +11,7 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
         }
 
         var streamKey = args[0];
-        var idTokens = args[1].Split('-');
-        var millisecondsTime = int.Parse(idTokens[0]);
-        var sequenceNumber = int.Parse(idTokens[1]);
+        var streamId = ParseId(args[1]);
 
         var fieldValues = args.Skip(2).ToArray();
         if (fieldValues.Length % 2 != 0)
@@ -27,15 +25,22 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
             fields[fieldValues[i]] = fieldValues[i + 1];
         }
 
-        try 
+        try
         {
-            streamsManager.Add(streamKey, millisecondsTime, sequenceNumber, fields);
+            var addedStreamId = streamsManager.Add(streamKey, streamId, fields);
+            return new RespBulkString(System.Text.Encoding.UTF8.GetBytes(addedStreamId.ToString()));
         }
         catch (Exception ex)
         {
             return new RespError($"ERR {ex.Message}");
         }
+    }
 
-        return new RespBulkString(System.Text.Encoding.UTF8.GetBytes(args[1]));
+    private StreamId ParseId(string rawId) {
+        var idTokens = rawId.Split('-');
+        var millisecondsTime = int.Parse(idTokens[0]);
+        var sequenceNumber = idTokens[1] == "*" ? null : (int?)int.Parse(idTokens[1]);
+
+        return new StreamId(millisecondsTime, sequenceNumber);
     }
 }
