@@ -16,7 +16,7 @@ internal class Stream()
 
         if (newMillisecondsTime != lastMillisecondsTime)
         {
-            newSequenceNumber = 0;
+            newSequenceNumber = newMillisecondsTime == 0 ? 1: 0;
         }
 
         if (newMillisecondsTime == 0 && newSequenceNumber == 0)
