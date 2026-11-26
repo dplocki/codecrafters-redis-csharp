@@ -1,8 +1,8 @@
 namespace codecrafters_redis.src.memory;
-
-internal class Stream()
+internal class Stream
 {
-    private readonly IDictionary<long, IDictionary<string, string>> entries = new Dictionary<long, IDictionary<string, string>>();
+    private readonly IDictionary<(long timePart, long sequencePart), IDictionary<string, string>> entries = new Dictionary<(long, long), IDictionary<string, string>>();
+
     private long lastMillisecondsTime = 0;
     private long lastSequenceNumber = 0;
 
@@ -12,29 +12,19 @@ internal class Stream()
     public StreamId Add(StreamId streamId, IDictionary<string, string> fields)
     {
         var newMillisecondsTime = streamId.MillisecondsTime;
-        long newSequenceNumber;
 
-        if (!streamId.SequenceNumber.HasValue)
+        long newSequenceNumber;
+        if (streamId.SequenceNumber.HasValue)
         {
-            if (entries.ContainsKey(newMillisecondsTime))
-            {
-                if (entries[newMillisecondsTime].Count == 0)
-                {
-                    newSequenceNumber = newMillisecondsTime == 0 ? 1 : 0;
-                }
-                else
-                {
-                    newSequenceNumber = lastSequenceNumber + 1;
-                }
-            }
-            else
-            {
-                newSequenceNumber = 0;
-            }
+            newSequenceNumber = streamId.SequenceNumber.Value;
+        }
+        else if (newMillisecondsTime == lastMillisecondsTime)
+        {
+            newSequenceNumber = lastSequenceNumber + 1;
         }
         else
         {
-            newSequenceNumber = streamId.SequenceNumber.Value;
+            newSequenceNumber = newMillisecondsTime == 0 ? 1 : 0;
         }
 
         if (newMillisecondsTime == 0 && newSequenceNumber == 0)
@@ -42,8 +32,7 @@ internal class Stream()
             throw new ArgumentException("The ID specified in XADD must be greater than 0-0");
         }
 
-        if (newMillisecondsTime < lastMillisecondsTime
-            || (newMillisecondsTime == lastMillisecondsTime && newSequenceNumber <= lastSequenceNumber))
+        if (newMillisecondsTime < lastMillisecondsTime || (newMillisecondsTime == lastMillisecondsTime && newSequenceNumber <= lastSequenceNumber))
         {
             throw new ArgumentException("The ID specified in XADD is equal or smaller than the target stream top item");
         }
@@ -51,7 +40,7 @@ internal class Stream()
         lastMillisecondsTime = newMillisecondsTime;
         lastSequenceNumber = newSequenceNumber;
 
-        entries[newMillisecondsTime] = fields;
+        entries[(newMillisecondsTime, newSequenceNumber)] = fields;
 
         return new StreamId(newMillisecondsTime, newSequenceNumber);
     }
