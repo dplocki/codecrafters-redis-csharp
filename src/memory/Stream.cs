@@ -14,6 +14,11 @@ internal class Stream()
         var newMillisecondsTime = streamId.MillisecondsTime;
         var newSequenceNumber = streamId.SequenceNumber ?? (lastSequenceNumber + 1);
 
+        if (newMillisecondsTime != lastMillisecondsTime)
+        {
+            newSequenceNumber = 0;
+        }
+
         if (newMillisecondsTime == 0 && newSequenceNumber == 0)
         {
             throw new ArgumentException("The ID specified in XADD must be greater than 0-0");
