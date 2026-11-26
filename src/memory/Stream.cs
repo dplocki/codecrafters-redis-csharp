@@ -18,11 +18,18 @@ internal class Stream()
         {
             if (entries.ContainsKey(newMillisecondsTime))
             {
-                newSequenceNumber = 0;
+                if (entries[newMillisecondsTime].Count == 0)
+                {
+                    newSequenceNumber = newMillisecondsTime == 0 ? 1 : 0;
+                }
+                else
+                {
+                    newSequenceNumber = lastSequenceNumber + 1;
+                }
             }
             else
             {
-                newSequenceNumber = lastSequenceNumber + 1;
+                newSequenceNumber = 0;
             }
         }
         else
