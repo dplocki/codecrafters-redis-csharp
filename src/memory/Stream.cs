@@ -11,30 +11,24 @@ internal class Stream()
 
     public StreamId Add(StreamId streamId, IDictionary<string, string> fields)
     {
-        if (streamId.MillisecondsTime == 0 && streamId.SequenceNumber == 0)
+        var newMillisecondsTime = streamId.MillisecondsTime;
+        var newSequenceNumber = streamId.SequenceNumber ?? (lastSequenceNumber + 1);
+
+        if (newMillisecondsTime == 0 && newSequenceNumber == 0)
         {
             throw new ArgumentException("The ID specified in XADD must be greater than 0-0");
         }
 
-        if (streamId.MillisecondsTime < lastMillisecondsTime || (streamId.MillisecondsTime == lastMillisecondsTime && streamId.SequenceNumber.HasValue && streamId.SequenceNumber.Value <= lastSequenceNumber))
+        if (newMillisecondsTime < lastMillisecondsTime || (newMillisecondsTime == lastMillisecondsTime && newSequenceNumber <= lastSequenceNumber))
         {
             throw new ArgumentException("The ID specified in XADD is equal or smaller than the target stream top item");
         }
 
-        lastMillisecondsTime = streamId.MillisecondsTime;
+        lastMillisecondsTime = newMillisecondsTime;
+        lastSequenceNumber = newSequenceNumber;
 
-        if (streamId.SequenceNumber == null)
-        {
-            lastSequenceNumber++;
-        }
-        else
-        {
-            lastSequenceNumber = streamId.SequenceNumber.Value;
-        }
+        entries[newMillisecondsTime] = fields;
 
-        lastSequenceNumber = streamId.SequenceNumber!.Value;
-        entries[streamId.MillisecondsTime] = fields;
-
-        return new StreamId(lastMillisecondsTime, lastSequenceNumber);
+        return new StreamId(newMillisecondsTime, newSequenceNumber);
     }
 }
