@@ -37,6 +37,10 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
     }
 
     private StreamId ParseId(string rawId) {
+        if (rawId == "*") {
+            return new StreamId(DateTime.UnixEpoch.Millisecond, null);
+        }
+
         var idTokens = rawId.Split('-');
         var millisecondsTime = long.Parse(idTokens[0]);
         var sequenceNumber = idTokens[1] == "*" ? null : (long?)long.Parse(idTokens[1]);
