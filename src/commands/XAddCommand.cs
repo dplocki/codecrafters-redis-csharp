@@ -38,7 +38,7 @@ public class XAddCommand(StreamsManager streamsManager) : ICommand
 
     private StreamId ParseId(string rawId) {
         if (rawId == "*") {
-            return new StreamId(DateTime.UnixEpoch.Millisecond, null);
+            return new StreamId(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), null);
         }
 
         var idTokens = rawId.Split('-');
