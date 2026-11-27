@@ -1,7 +1,7 @@
 namespace codecrafters_redis.src.memory;
 internal class Stream
 {
-    private readonly IDictionary<(long timePart, long sequencePart), IDictionary<string, string>> entries = new Dictionary<(long, long), IDictionary<string, string>>();
+    private readonly IDictionary<long, IDictionary<long, IDictionary<string, string>>> entries = new Dictionary<long, IDictionary<long, IDictionary<string, string>>>();
 
     private long lastMillisecondsTime = 0;
     private long lastSequenceNumber = 0;
@@ -31,7 +31,13 @@ internal class Stream
         lastMillisecondsTime = newMillisecondsTime;
         lastSequenceNumber = newSequenceNumber;
 
-        entries[(newMillisecondsTime, newSequenceNumber)] = fields;
+        if (!entries.TryGetValue(newMillisecondsTime, out var sequences))
+        {
+            sequences = new Dictionary<long, IDictionary<string, string>>();
+            entries[newMillisecondsTime] = sequences;
+        }
+
+        sequences[newSequenceNumber] = fields;
 
         return new StreamId(newMillisecondsTime, newSequenceNumber);
     }
